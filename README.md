@@ -55,28 +55,28 @@ MODIFY COLUMN `Other people in need of international protection` int;
 For data cleaning, transformation, and initial querying of the UNHCR Refugee Dataset, I used SQL. I proceeded to use PowerBI to create interactive maps, dashboards, and visualizations that convey the project's insights effectively. Here are the questions I explored with this dataset:
 
 ### Trends in Global Forced Displacement
-1. What is the total number of Forcibly displaced People in the last 50 years?
-2. Has the total number of displaced people increased of decreased over the years?
+1. What is the total number of forcibly displaced people in the last 50 years?
+2. Has the total number of displaced people increased or decreased over the years?
 3. How has the total number of refugees, asylum seekers, and internally displaced persons (IDPs) changed over the years?
-4. Which year had the highest and lowest total number of refugees, asylum seekers and IDPs
+4. Which year had the highest and lowest total number of people displaced?
 
-### Geospatial Analysis and Impact of Events
+### Geospatial Analysis 
 5. Which countries have been major sources of refugees, and which have been major host countries?
 6. Have there been significant changes in the leading countries of origin and asylum over time?
 7. Are there any countries that have consistently received refugees and asylum seekers while also being major sources of displacement themselves?
-8. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements or demographics?
 
-### Comparative Analysis
-9. How do the numbers of refugees, asylum seekers, and IDPs compare to one another over the years?
-10. Are there any countries where asylum seekers significantly outnumber refugees?
+
+### Comparative Analysis and Impact of Events
+8. Are there any countries where asylum seekers significantly outnumber refugees?
+9. In which year did each country have the highest number of displaced people?
+10. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements or demographics?
 
 ### Other People in Need of International Protection
-11. What are the trends in the number of internally displaced persons (IDPs) of concern to UNHCR?
-12. Which countries have the highest number of IDPs of concern, and have these numbers increased or decreased?
-
+11. Are there specific years or periods where other people in need of international protection experienced significant increases or decreases?
+12. Are there countries or regions where the proportion of "Other People in Need of International Protection" is significantly higher or lower compared to refugees and asylum seekers?
 
 ### Predictive Modeling
-15. Can you build predictive models to forecast future trends in refugee movements or asylum applications based on historical data?
+13. Can you build predictive models to forecast future trends in refugee movements or asylum applications based on historical data?
 
 ## Data Analysis
 
@@ -114,7 +114,6 @@ GROUP BY Year
 ORDER BY Year;
 ```
 
-
 _**Which year had the highest and lowest total number of refugees, asylum seekers and IDPs**_
 
 ```{sql}
@@ -137,37 +136,8 @@ ORDER BY Lowest_total_displaced ASC
 LIMIT 1;
 ```
 
-_**Which country of origin has the highest number of displaced people?**_ 
 
-```{sql}
-SELECT
-    `Country of origin`,
-    SUM(`Refugees under UNHCRs mandate` + `Asylum seekers` + `IDPs of concern to UNHCR` + `Other people in need of international protection`) AS Total_Displaced_People
-FROM
-    `unhcr displacement`
-GROUP BY
-    `Country of origin`
-ORDER BY
-    Total_Displaced_People DESC; 
-```
-
-_**Which country of origin has the lowest number of displaced people?**_
-
-```{sql}
-
-SELECT
-    `Country of origin`,
-    SUM(`Refugees under UNHCRs mandate` + `Asylum seekers` + `IDPs of concern to UNHCR` + `Other people in need of international protection`) AS Total_Displaced_People
-FROM
-    `unhcr displacement`
-GROUP BY
-    `Country of origin`
-ORDER BY
-    Total_Displaced_People ASC 
-LIMIT 1;
-```
-
-### Country-Specific Analysis
+### Geospatial Analysis
 
 _**Which countries are major sources of refugees?**_
 
@@ -199,152 +169,250 @@ ORDER BY
     LIMIT 10;
 ```
 
+_**Have there been significant changes in the leading countries of origin and asylum over time?**_
+
+```{sql}
+WITH CountryOriginCounts AS (
+  SELECT
+    Year,
+    `Country of origin`,
+    SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees
+  FROM
+    `unhcr displacement`
+  GROUP BY
+    Year,
+    `Country of origin`
+),
+CountryAsylumCounts AS (
+  SELECT
+    Year,
+    `Country of asylum`,
+    SUM(`Refugees under UNHCRs mandate`) AS Total_Asylum
+  FROM
+    `unhcr displacement`
+  GROUP BY
+    Year,
+    `Country of asylum`
+),
+RankedCountryOrigin AS (
+  SELECT
+    Year,
+    `Country of origin`,
+    Total_Refugees,
+    ROW_NUMBER() OVER (PARTITION BY Year ORDER BY Total_Refugees DESC) AS Rank_Origin
+  FROM
+    CountryOriginCounts
+),
+RankedCountryAsylum AS (
+  SELECT
+    Year,
+    `Country of asylum`,
+    Total_Asylum,
+    ROW_NUMBER() OVER (PARTITION BY Year ORDER BY Total_Asylum DESC) AS Rank_Asylum
+  FROM
+    CountryAsylumCounts
+)
+SELECT
+  R1.Year,
+  R1.`Country of origin` AS Leading_Origin,
+  R2.`Country of origin` AS Previous_Leading_Origin,
+  R1.Total_Refugees AS Leading_Origin_Count,
+  R2.Total_Refugees AS Previous_Leading_Origin_Count,
+  R3.`Country of asylum` AS Leading_Asylum,
+  R4.`Country of asylum` AS Previous_Leading_Asylum,
+  R3.Total_Asylum AS Leading_Asylum_Count,
+  R4.Total_Asylum AS Previous_Leading_Asylum_Count
+FROM
+  RankedCountryOrigin R1
+LEFT JOIN
+  RankedCountryOrigin R2
+ON
+  R1.Year = R2.Year + 1
+  AND R1.Rank_Origin = 1
+  AND R2.Rank_Origin = 1
+LEFT JOIN
+  RankedCountryAsylum R3
+ON
+  R1.Year = R3.Year
+  AND R1.Rank_Origin = 1
+LEFT JOIN
+  RankedCountryAsylum R4
+ON
+  R1.Year = R4.Year + 1
+  AND R3.Rank_Asylum = 1
+  AND R4.Rank_Asylum = 1
+WHERE
+  R2.`Country of origin` IS NOT NULL
+  OR R4.`Country of asylum` IS NOT NULL
+ORDER BY
+  R1.Year;
+```
+
 _**Are there any countries that have consistently received refugees and asylum seekers while also being major sources of displacement themselves?**_
 
 ```{sql}
 WITH CountryDisplacement AS (
-    SELECT
-        `Country of origin`,
-        `Country of asylum`,
-        SUM(`Refugees under UNHCRs mandate` + `Asylum seekers`) AS Total_Outbound_Displacement
-    FROM
-        `unhcr displacement`
-    GROUP BY
-        `Country of origin`,
-        `Country of asylum`
-),
-CountryReception AS (
-    SELECT
-        `Country of origin`,
-        `Country of asylum`,
-        SUM(`Refugees under UNHCRs mandate` + `Asylum seekers`) AS Total_Inbound_Displacement
-    FROM
-        `unhcr displacement`
-    GROUP BY
-        `Country of asylum`,
-        `Country of origin`
-)
-SELECT
-    A.`Country of origin`,
-    A.`Country of asylum`
-FROM
-    CountryDisplacement A
-JOIN
-    CountryReception B
-ON
-    A.`Country of origin` = B.`Country of origin`
-WHERE
-    A.Total_Outbound_Displacement > 0
-    AND B.Total_Inbound_Displacement > 0;
-```
-
-_**In which year did each country have the highest Refugees, and Asylum Seekers**_
-
-```{sql}
-WITH max_values AS (
   SELECT
+    Year,
     `Country of origin`,
-    MAX(`Refugees under UNHCRs mandate`) AS max_refugees,
-    MAX(`Asylum seekers`) AS max_asylum_seekers
+    SUM(`Refugees under UNHCRs mandate`) AS Total_Origin_Refugees,
+    SUM(`Asylum seekers`) AS Total_Origin_Asylum_Seekers,
+    SUM(`IDPs of concern to UNHCR`) AS Total_Origin_IDPs
   FROM
     `unhcr displacement`
   GROUP BY
+    Year,
     `Country of origin`
-)
-
-SELECT
-  u.`Country of origin`,
-  u.Year AS Year_Refugees,
-  u.Year AS Year_Asylum_seekers
-FROM
-  `unhcr displacement` u
-Inner JOIN
-  max_values max_ref ON u.`Country of origin` = max_ref.`Country of origin` AND u.`Refugees under UNHCRs mandate` = max_ref.max_refugees
-inner JOIN
-  max_values max_asylum ON u.`Country of origin` = max_asylum.`Country of origin` AND u.`Asylum seekers` = max_asylum.max_asylum_seekers;
-``` 
-
-### Comparative Analysis
-
-_**How do the numbers of refugees, asylum seekers, and IDPs compare to one another over the years?**_
-
-```{sql}
-SELECT
-Year,
-    SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees,
-    SUM(`Asylum seekers`) AS Total_Asylum_Seekers,
-    SUM(`IDPs of concern to UNHCR`) AS Total_IDPs,
-    SUM(`Other people in need of international protection`) AS Total_Other_In_Need
-FROM
+),
+CountryAsylum AS (
+  SELECT
+    Year,
+    `Country of asylum`,
+    SUM(`Refugees under UNHCRs mandate`) AS Total_Asylum_Refugees,
+    SUM(`Asylum seekers`) AS Total_Asylum_Asylum_Seekers
+  FROM
     `unhcr displacement`
+  GROUP BY
+    Year,
+    `Country of asylum`
+)
+SELECT
+  CO.`Country of origin` AS Country_of_Displacement,
+  CA.`Country of asylum` AS Country_of_Reception,
+  SUM(CO.Total_Origin_Refugees) AS Total_Origin_Refugees,
+  SUM(CO.Total_Origin_Asylum_Seekers) AS Total_Origin_Asylum_Seekers,
+  SUM(CO.Total_Origin_IDPs) AS Total_Origin_IDPs,
+  SUM(CA.Total_Asylum_Refugees) AS Total_Asylum_Refugees,
+  SUM(CA.Total_Asylum_Asylum_Seekers) AS Total_Asylum_Asylum_Seekers
+FROM
+  CountryDisplacement CO
+JOIN
+  CountryAsylum CA
+ON
+  CO.Year = CA.Year
+  AND CO.`Country of origin` = CA.`Country of asylum`
 GROUP BY
-    Year
+  CO.`Country of origin`,
+  CA.`Country of asylum`
+HAVING
+  SUM(CO.Total_Origin_Refugees) > 0
+  AND SUM(CO.Total_Origin_Asylum_Seekers) > 0
+  AND SUM(CA.Total_Asylum_Refugees) > 0
+  AND SUM(CA.Total_Asylum_Asylum_Seekers) > 0
 ORDER BY
-    Year;
+  Total_Origin_Refugees DESC;
 ```
+
+##  Comparative Analysis and Impact of Events
 
 _**Are there any countries where asylum seekers significantly outnumber refugees?**_
 ```{sql}
-SELECT
-    Year,
-    `Country of origin`,
-    SUM(`Asylum seekers`) AS Total_Asylum_Seekers,
-    SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees,
-    CASE
-        WHEN SUM(`Refugees under UNHCRs mandate`) = 0 THEN 0
-        ELSE SUM(`Asylum seekers`) / SUM(`Refugees under UNHCRs mandate`)
-    END AS Asylum_Seeker_to_Refugee_Ratio
-FROM
-    `unhcr displacement`
-GROUP BY
-    Year,
-    `Country of origin`
-HAVING
-    Asylum_Seeker_to_Refugee_Ratio > 2; -- You can adjust the threshold as needed
+SELECT `Country of origin`, 
+SUM(`Asylum seekers`) AS Total_Asylum_Seekers, 
+SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees
+FROM `unhcr displacement`
+GROUP BY `Country of origin`
+HAVING Total_Asylum_Seekers > Total_Refugees
+ORDER BY Total_Asylum_Seekers DESC;
 ```
 
-## IDPs of Concern to UNHCR
-
-_**What are the trends in the number of internally displaced persons (IDPs) of concern to UNHCR?**_
+_**In which year did each country have the highest number of displaced people?**_
 
 ```{sql}
+WITH DisplacementSummary AS (
+    SELECT
+        `Country of origin`,
+        Year,
+        SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees,
+        SUM(`Asylum seekers`) AS Total_Asylum_Seekers,
+        SUM(`IDPs of concern to UNHCR`) AS Total_IDPs,
+        SUM(`Other people in need of international protection`) AS Total_Other_Needs
+    FROM
+        `unhcr displacement`
+    GROUP BY
+        `Country of origin`,
+        Year
+),
+MaxDisplacementYear AS (
+    SELECT
+        `Country of origin`,
+        MAX(Total_Refugees + Total_Asylum_Seekers + Total_IDPs + Total_Other_Needs) AS Max_Displacement
+    FROM
+        DisplacementSummary
+    GROUP BY
+        `Country of origin`
+)
+SELECT
+    m.`Country of origin`,
+    d.Year AS Year_of_Highest_Displacement,
+    Max_Displacement
+FROM
+    DisplacementSummary d
+JOIN
+    MaxDisplacementYear m
+ON
+    d.`Country of origin` = m.`Country of origin`
+    AND (d.Total_Refugees + d.Total_Asylum_Seekers + d.Total_IDPs + d.Total_Other_Needs) = m.Max_Displacement
+ORDER BY
+   Max_Displacement DESC;
+```
+
+
+## Other People in Need of International Protection 
+
+_**Are there specific years or periods where other people in need of international protection experienced significant increases or decreases?**_
+
+```{sql}
+WITH OtherProtectionChanges AS (
+    SELECT
+        Year,
+        SUM(`Other people in need of international protection`) AS Total_Other_Protection
+    FROM
+        `unhcr displacement`
+    GROUP BY
+        Year
+)
 SELECT
     Year,
-    SUM(`IDPs of concern to UNHCR`) AS Total_IDPs
+    Total_Other_Protection,
+    LAG(Total_Other_Protection) OVER (ORDER BY Year) AS Previous_Year_Other_Protection,
+    (Total_Other_Protection - LAG(Total_Other_Protection) OVER (ORDER BY Year)) AS Change_In_Other_Protection
 FROM
-    `unhcr displacement`
-GROUP BY
-    Year
+    OtherProtectionChanges
 ORDER BY
     Year;
 ```
 
-_**Which countries have the highest number of IDPs of concern, and have these numbers increased or decreased?**_
+_**Are there countries or regions where the proportion of "Other People in Need of International Protection" is significantly higher or lower compared to refugees and asylum seekers?**_
 
 ```{sql}
+WITH ProtectionComparison AS (
+    SELECT
+        Year,
+        `Country of origin`,
+        SUM(`Other people in need of international protection`) AS Total_Other_Protection,
+        SUM(`Refugees under UNHCRs mandate`) AS Total_Refugees,
+        SUM(`Asylum seekers`) AS Total_Asylum_Seekers
+    FROM
+        `unhcr displacement`
+    GROUP BY
+        Year,
+        `Country of origin`
+)
 SELECT
-    `Country of asylum`,
-    MAX(`IDPs of concern to UNHCR`) AS Highest_IDPs,
-    MIN(`IDPs of concern to UNHCR`) AS Lowest_IDPs,
-    MAX(`IDPs of concern to UNHCR`) - MIN(`IDPs of concern to UNHCR`) AS Change_in_IDPs
+    Year,
+    `Country of origin`,
+    Total_Other_Protection,
+    Total_Refugees,
+    Total_Asylum_Seekers,
+    CASE
+        WHEN Total_Other_Protection > (Total_Refugees + Total_Asylum_Seekers) THEN 'Higher'
+        WHEN Total_Other_Protection < (Total_Refugees + Total_Asylum_Seekers) THEN 'Lower'
+        ELSE 'Equal'
+    END AS Proportion_Comparison
 FROM
-    `unhcr displacement`
-GROUP BY
-    `Country of asylum`
+    ProtectionComparison
 ORDER BY
-    Highest_IDPs DESC;
+    Year,
+    `Country of origin`;
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-

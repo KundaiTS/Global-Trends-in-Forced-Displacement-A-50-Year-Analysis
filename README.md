@@ -55,34 +55,25 @@ MODIFY COLUMN `Other people in need of international protection` int;
 For data cleaning, transformation, and initial querying of the UNHCR Refugee Dataset, I used SQL. I proceeded to use PowerBI to create interactive maps, dashboards, and visualizations that convey the project's insights effectively. Here are the questions I explored with this dataset:
 
 ### Trends in Global Forced Displacement
-1. How has the total number of refugees, asylum seekers, and internally displaced persons (IDPs) changed over the years?
-2. Which year had the highest and lowest total number of refugees, asylum seekers and IDPs
-3. Identify countries and regions that have experienced significant increases or decreases in displaced populations.
+1. What is the total number of Forcibly displaced People in the last 50 years?
+2. Has the total number of displaced people increased of decreased over the years?
+3. How has the total number of refugees, asylum seekers, and internally displaced persons (IDPs) changed over the years?
+4. Which year had the highest and lowest total number of refugees, asylum seekers and IDPs
 
-
-### Country-Specific Analysis:
-4. Which countries have been major sources of refugees, and which have been major host countries?
-5. Have there been significant changes in the leading countries of origin and asylum over time?
-6. Are there any countries that have consistently received refugees and asylum seekers while also being major sources of displacement themselves?
-
-
-### Regional Displacement Patterns
-7. Are there specific regions that have experienced higher levels of forced displacement?
-8. Have there been any regional conflicts or events that correlate with spikes in displacement numbers?
+### Geospatial Analysis and Impact of Events
+5. Which countries have been major sources of refugees, and which have been major host countries?
+6. Have there been significant changes in the leading countries of origin and asylum over time?
+7. Are there any countries that have consistently received refugees and asylum seekers while also being major sources of displacement themselves?
+8. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements or demographics?
 
 ### Comparative Analysis
 9. How do the numbers of refugees, asylum seekers, and IDPs compare to one another over the years?
 10. Are there any countries where asylum seekers significantly outnumber refugees?
 
-### IDPs of Concern to UNHCR
+### Other People in Need of International Protection
 11. What are the trends in the number of internally displaced persons (IDPs) of concern to UNHCR?
 12. Which countries have the highest number of IDPs of concern, and have these numbers increased or decreased?
 
-### Geospatial Analysis
-13. Conduct geospatial analysis to pinpoint regions with the highest concentration of refugees. Assess the relationship between refugee movements and geopolitical factors.
-
-### Impact of Events
-14. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements or demographics?
 
 ### Predictive Modeling
 15. Can you build predictive models to forecast future trends in refugee movements or asylum applications based on historical data?
@@ -90,6 +81,25 @@ For data cleaning, transformation, and initial querying of the UNHCR Refugee Dat
 ## Data Analysis
 
 ### Trends in Global Forced Displacement
+
+_**What is the total number of Forcibly displaced People in the last 50 years?**_
+
+```{sql}
+SELECT
+    SUM(`Refugees under UNHCRs mandate` + `Asylum seekers` + `IDPs of concern to UNHCR` + `Other people in need of international protection`) AS Total_displaced
+FROM `unhcr displacement`
+ORDER BY Total_displaced DESC;
+```
+
+_**Has the total number of displaced people increased of decreased over the years?**_
+
+``` {sql}
+SELECT Year,
+    SUM(`Refugees under UNHCRs mandate` + `Asylum seekers` + `IDPs of concern to UNHCR` + `Other people in need of international protection`) AS Total_displaced
+FROM `unhcr displacement`
+GROUP BY Year
+ORDER BY Total_displaced DESC;
+```
 
 _**How has the total number of refugees, asylum seekers, and internally displaced persons (IDPs) changed over the years?**_
 
@@ -103,15 +113,7 @@ FROM `unhcr displacement`
 GROUP BY Year
 ORDER BY Year;
 ```
-_**What is the total number of Forcibly displaced People in the last 50 years?**_
 
-```{sql}
-SELECT Year,
-    SUM(`Refugees under UNHCRs mandate` + `Asylum seekers` + `IDPs of concern to UNHCR` + `Other people in need of international protection`) AS Total_displaced
-FROM `unhcr displacement`
-GROUP BY Year
-ORDER BY Total_displaced DESC;
-```
 
 _**Which year had the highest and lowest total number of refugees, asylum seekers and IDPs**_
 

@@ -51,6 +51,46 @@ ALTER TABLE `unhcr displacement`
 MODIFY COLUMN `Other people in need of international protection` int;
 ```
 
+_**Changing incorrect values- Country names**_
+
+```{sql}
+UPDATE `unhcr displacement`
+SET `Country of origin` = 
+    CASE 
+        WHEN `Country of origin`  = 'Dominican Rep.' THEN 'Dominican Republic'
+        WHEN `Country of origin` = 'Indonesian' THEN 'Indonesia'
+        WHEN `Country of origin` = 'Tibetan' THEN 'Tibet'
+        WHEN `Country of origin` = 'Dem. Rep. of the Congo' THEN 'Democratic Republic of the Congo'
+        WHEN `Country of origin` = 'Türkiye' THEN 'Turkey'
+        WHEN `Country of origin` = 'Syrian Arab Rep.' THEN 'Syria'
+        WHEN `Country of origin` = 'Viet Nam' THEN 'Vietnam'
+        WHEN `Country of origin` = 'Palestinian' THEN 'State of Palestine'
+        WHEN `Country of origin` = 'Palestina' THEN 'State of Palestine'
+        WHEN `Country of origin` = "Lao People's Dem. Rep." THEN "Lao People's Democratic Republic"
+        WHEN `Country of origin` = 'Western Sahara' THEN 'Sahrawi Arab Democratic Republic'
+	ELSE `Country of origin`
+    END;
+```
+    
+```{sql}
+UPDATE `unhcr displacement`
+SET `Country of asylum` = 
+    CASE 
+        WHEN `Country of asylum`  = 'Dominican Rep.' THEN 'Dominican Republic'
+        WHEN `Country of asylum` = 'Indonesian' THEN 'Indonesia'
+        WHEN `Country of asylum` = 'Tibetan' THEN 'Tibet'
+        WHEN `Country of asylum` = 'Dem. Rep. of the Congo' THEN 'Democratic Republic of the Congo'
+        WHEN `Country of asylum` = 'Türkiye' THEN 'Turkey'
+        WHEN `Country of asylum` = 'Syrian Arab Rep.' THEN 'Syria'
+        WHEN `Country of asylum` = 'Viet Nam' THEN 'Vietnam'
+        WHEN `Country of asylum` = 'Palestinian' THEN 'State of Palestine'
+        WHEN `Country of asylum` = 'Palestina' THEN 'State of Palestine'
+        WHEN `Country of asylum` = "Lao People's Dem. Rep." THEN "Lao People's Democratic Republic"
+        WHEN `Country of asylum` = 'Western Sahara' THEN 'Sahrawi Arab Democratic Republic'
+	ELSE `Country of asylum`
+    END;
+```
+
 ## Data Analysis
 For data cleaning, transformation, and initial querying of the UNHCR Refugee Dataset, I used SQL. I proceeded to use PowerBI to create interactive maps, dashboards, and visualizations that convey the project's insights effectively. Here are the questions I explored with this dataset:
 

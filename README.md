@@ -1,6 +1,6 @@
-# Global Trends in Forced Displacement A 50 Year Analysis
+# Global Trends in Forced Displacement A 50-Year Analysis
 
-This project aims to analyze the UNHCR dataset on forcibly displaced populations to understand global migration and refugee trends over a 50-year period. I will leverage SQL for data preprocessing and analysis and Power BI for creating data visualizations and insights. Through the lens of SQL and PowerBI, I aim to uncover insightful patterns, explore demographic trends, and assess the causes and consequences of refugee movements across the world. The project will culminate in the creation of interactive maps and visualizations, providing a comprehensive understanding of this humanitarian challenge.
+This project aims to analyze the UNHCR dataset on forcibly displaced populations to understand global migration and refugee trends over a 50-year period. I will leverage SQL for data preprocessing and analysis and Power BI for creating data visualizations and insights. Through the lens of SQL and PowerBI, I aim to uncover insightful patterns and assess the causes and consequences of refugee movements across the world. The project will culminate in the creation of interactive maps and visualizations, providing a comprehensive understanding of this humanitarian challenge.
 
 ## Project Impact
 This project aims to shed light on one of the world's most pressing humanitarian challenges. By analyzing the UNHCR Refugee Dataset and creating impactful visualizations, we seek to raise awareness about the causes and consequences of refugee crises, inform policymakers, and support organizations dedicated to addressing this issue. Ultimately, the project contributes to a better understanding of the global refugee landscape, with the potential to drive informed decisions and solutions for those affected by displacement.
@@ -100,23 +100,19 @@ For data cleaning, transformation, and initial querying of the UNHCR Refugee Dat
 3. How has the total number of refugees, asylum seekers, and internally displaced persons (IDPs) changed over the years?
 4. Which year had the highest and lowest total number of people displaced?
 
-### Geospatial Analysis 
+### Geospatial Analysis and Impact of Events
 5. Which countries have been major sources of refugees, and which have been major host countries?
 6. Have there been significant changes in the leading countries of origin and asylum over time?
-7. Are there any countries that have consistently received refugees and asylum seekers while also being major sources of displacement themselves?
-
+7. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements?
 
 ### Comparative Analysis and Impact of Events
 8. Are there any countries where asylum seekers significantly outnumber refugees?
 9. In which year did each country have the highest number of displaced people?
-10. Are there specific global events, conflicts, or crises that correlate with significant changes in refugee movements or demographics?
 
 ### Other People in Need of International Protection
-11. Are there specific years or periods where other people in need of international protection experienced significant increases or decreases?
-12. Are there countries or regions where the proportion of "Other People in Need of International Protection" is significantly higher or lower compared to refugees and asylum seekers?
+10. Are there specific years or periods where other people in need of international protection experienced significant increases or decreases?
+11. Are there countries or regions where the proportion of "Other People in Need of International Protection" is significantly higher or lower compared to refugees and asylum seekers?
 
-### Predictive Modeling
-13. Can you build predictive models to forecast future trends in refugee movements or asylum applications based on historical data?
 
 ## Data Analysis
 
@@ -177,7 +173,7 @@ LIMIT 1;
 ```
 
 
-### Geospatial Analysis
+### Geospatial Analysis and Impact of Events
 
 _**Which countries are major sources of refugees?**_
 
@@ -343,7 +339,7 @@ ORDER BY
   Total_Origin_Refugees DESC;
 ```
 
-##  Comparative Analysis and Impact of Events
+##  Comparative Analysis 
 
 _**Are there any countries where asylum seekers significantly outnumber refugees?**_
 ```{sql}
